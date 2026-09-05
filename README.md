@@ -1,28 +1,13 @@
-# ADAS Bike Monitor Web v2
+# ADAS Bike Monitor Web v3
 
-Cập nhật cho firmware ESP32-C3 + HLK-LD2451 UART.
+Giao diện mới theo kiểu dashboard xe:
+- Cột trái: Radar/Risk, GPS, Log
+- Trung tâm: Bản đồ lớn
+- Cột phải: LD2451 Config
+- Responsive cho tablet/mobile
+- Giữ nguyên toàn bộ ID và logic BLE của web v2
 
-## Thêm mới
-- Hiển thị targets, SNR, TTC
-- Chỉnh:
-  - range_m
-  - direction
-  - min_speed_kmh
-  - delay_s
-  - trigger_count
-  - snr_threshold
-  - ttc_warn
-  - ttc_critical
-- RADAR_READ
-- RADAR_FW
-- PING
-- Radar config notify nếu firmware hỗ trợ
-- GeoJSON log thêm radar fields
-
-## Deploy
-Thay 3 file trong repo GitHub Pages:
+Chỉ cần thay:
 - index.html
 - style.css
 - app.js
-
-GitHub Pages sẽ tự cập nhật sau commit.
