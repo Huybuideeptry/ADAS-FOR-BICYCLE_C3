@@ -1,22 +1,19 @@
 <!doctype html>
 <html lang="vi">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="theme-color" content="#0a0f1c">
-  <title>ADAS Bike Monitor</title>
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-  <link rel="stylesheet" href="style.css">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#0a0f1c">
+<title>ADAS Bike Monitor</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<link rel="stylesheet" href="style.css">
 </head>
 <body>
 <header class="topbar">
-  <div class="brand">
-    <div class="logo">A</div>
-    <div>
-      <div class="eyebrow">ESP32-C3 · LD2451 · BLE GATT</div>
-      <h1>ADAS Bike Monitor</h1>
-    </div>
-  </div>
+  <div class="brand"><div class="logo">A</div><div>
+    <div class="eyebrow">ESP32-C3 · LD2451 · BLE GATT</div>
+    <h1>ADAS Bike Monitor</h1>
+  </div></div>
   <div class="actions">
     <button id="connect" class="primary">Kết nối BLE</button>
     <button id="disconnect" disabled>Ngắt</button>
@@ -24,174 +21,109 @@
 </header>
 
 <main class="layout">
-  <section class="left-col">
-    <article class="panel hero">
-      <div class="panel-head">
-        <div>
-          <div class="panel-title">Radar / Mức nguy hiểm</div>
-          <div class="status-line">
-            <span id="bleDot" class="dot off"></span>
-            <span id="bleState">Chưa kết nối</span>
-          </div>
-        </div>
-        <div id="risk" class="risk-badge risk0">AN TOÀN</div>
+<section class="left-col">
+  <article class="panel hero">
+    <div class="panel-head"><div>
+      <div class="panel-title">Radar / Mức nguy hiểm</div>
+      <div class="status-line"><span id="bleDot" class="dot off"></span><span id="bleState">Chưa kết nối</span></div>
+    </div><div id="risk" class="risk-badge risk0">AN TOÀN</div></div>
+    <div class="big-metric"><span>Khoảng cách</span><strong id="distance">—</strong></div>
+    <div class="metrics compact">
+      <div><span>Tốc độ áp sát</span><b id="closing">—</b></div>
+      <div><span>Thời gian tới va chạm (TTC)</span><b id="ttc">—</b></div>
+      <div><span>Góc lệch</span><b id="angle">—</b></div>
+      <div><span>SNR</span><b id="snr">—</b></div>
+      <div><span>Số mục tiêu</span><b id="targets">—</b></div>
+    </div>
+  </article>
+
+  <article class="panel">
+    <div class="panel-title">GPS</div>
+    <div class="metrics compact">
+      <div><span>Định vị</span><b id="fix">—</b></div>
+      <div><span>Số vệ tinh</span><b id="sats">—</b></div>
+      <div><span>Tốc độ</span><b id="speed">—</b></div>
+    </div>
+    <div class="coords-box"><span>Tọa độ</span><b id="coords">—</b></div>
+  </article>
+
+  <article class="panel">
+    <div class="panel-head simple"><div class="panel-title">Ghi hành trình</div><div id="tripInfo" class="tiny">0 điểm</div></div>
+    <div class="button-grid">
+      <button id="start">Bắt đầu ghi</button><button id="stop" disabled>Dừng</button>
+      <button id="clear">Xóa dữ liệu</button><button id="export">Xuất GeoJSON</button>
+    </div>
+    <button id="center" class="full">Về vị trí hiện tại</button>
+  </article>
+</section>
+
+<section class="center-col">
+  <article class="panel map-panel">
+    <div class="panel-head simple"><div><div class="panel-title">Bản đồ hành trình</div><div class="tiny">OpenStreetMap · Leaflet</div></div></div>
+    <div id="map"></div>
+  </article>
+  <article class="panel console-panel"><div class="panel-title">Nhật ký hệ thống</div><pre id="log"></pre></article>
+</section>
+
+<aside class="right-col">
+  <article class="panel config-card">
+    <div class="panel-head simple"><div><div class="panel-title">Cấu hình LD2451</div><div class="tiny">Thiết lập radar phía sau</div></div></div>
+    <div class="form-grid">
+      <label><span>Tầm phát hiện</span><div class="input-unit"><input id="range" type="number" min="10" max="100" value="100"><em>m</em></div></label>
+      <label><span>Hướng mục tiêu</span><select id="direction">
+        <option value="0">Chỉ mục tiêu đi xa</option>
+        <option value="1" selected>Chỉ mục tiêu tiến lại gần</option>
+        <option value="2">Cả hai hướng</option></select></label>
+      <label><span>Tốc độ tối thiểu</span><div class="input-unit"><input id="minSpeed" type="number" min="0" max="120" value="5"><em>km/h</em></div></label>
+      <label><span>Thời gian giữ sau khi mất mục tiêu</span><div class="input-unit"><input id="delayS" type="number" min="0" max="255" value="2"><em>s</em></div></label>
+      <label><span>Số lần kích hoạt</span><input id="triggerCount" type="number" min="1" max="10" value="1"></label>
+      <label><span>Ngưỡng SNR</span><select id="snrThreshold">
+        <option value="0">0 · Mặc định firmware</option><option value="3">3 · Nhạy hơn</option>
+        <option value="4" selected>4 · Mặc định</option><option value="5">5</option>
+        <option value="6">6</option><option value="7">7</option><option value="8">8 · Ít nhạy hơn</option>
+      </select></label>
+    </div>
+    <div class="divider"></div>
+    <div class="subhead">Ngưỡng cảnh báo ADAS</div>
+    <div class="form-grid two">
+      <label><span>TTC cảnh báo</span><div class="input-unit"><input id="warn" type="number" min=".5" max="30" step=".1" value="5"><em>s</em></div></label>
+      <label><span>TTC khẩn cấp</span><div class="input-unit"><input id="critical" type="number" min=".2" max="15" step=".1" value="2.5"><em>s</em></div></label>
+    </div>
+    <div class="button-stack">
+      <div class="button-row"><button id="readcfg" disabled>Đọc từ radar</button><button id="writecfg" class="primary" disabled>Gửi cấu hình</button></div>
+      <div class="button-row"><button id="fw" disabled>Đọc phiên bản</button><button id="ping" disabled>Kiểm tra kết nối</button></div>
+    </div>
+  </article>
+
+  <article class="panel ota-card">
+    <div class="panel-head simple"><div>
+      <div class="panel-title">Cập nhật firmware không dây</div>
+      <div class="tiny">BLE OTA · không cần cáp USB</div>
+    </div></div>
+
+    <input id="fwFile" class="file-input" type="file" accept=".bin,application/octet-stream">
+    <div id="fwMeta" class="ota-meta">Chưa chọn file firmware.</div>
+
+    <div class="progress-wrap">
+      <div class="progress-track"><div id="otaBar" class="progress-bar"></div></div>
+      <div class="progress-info">
+        <span id="otaPercent">0%</span>
+        <span id="otaSpeed">0 KB/s</span>
       </div>
+    </div>
 
-      <div class="big-metric">
-        <span>Khoảng cách</span>
-        <strong id="distance">—</strong>
-      </div>
+    <div class="ota-stats">
+      <div><span>Đã gửi</span><b id="otaBytes">0 KB</b></div>
+      <div><span>Thời gian</span><b id="otaTime">0.0 s</b></div>
+    </div>
 
-      <div class="metrics compact">
-        <div><span>Tốc độ áp sát</span><b id="closing">—</b></div>
-        <div><span>Thời gian tới va chạm (TTC)</span><b id="ttc">—</b></div>
-        <div><span>Góc lệch</span><b id="angle">—</b></div>
-        <div><span>SNR</span><b id="snr">—</b></div>
-        <div><span>Số mục tiêu</span><b id="targets">—</b></div>
-      </div>
-    </article>
-
-    <article class="panel">
-      <div class="panel-title">GPS</div>
-      <div class="metrics compact">
-        <div><span>Định vị</span><b id="fix">—</b></div>
-        <div><span>Số vệ tinh</span><b id="sats">—</b></div>
-        <div><span>Tốc độ</span><b id="speed">—</b></div>
-      </div>
-      <div class="coords-box">
-        <span>Tọa độ</span>
-        <b id="coords">—</b>
-      </div>
-    </article>
-
-    <article class="panel">
-      <div class="panel-head simple">
-        <div class="panel-title">Ghi hành trình</div>
-        <div id="tripInfo" class="tiny">0 điểm</div>
-      </div>
-      <div class="button-grid">
-        <button id="start">Bắt đầu ghi</button>
-        <button id="stop" disabled>Dừng</button>
-        <button id="clear">Xóa dữ liệu</button>
-        <button id="export">Xuất GeoJSON</button>
-      </div>
-      <button id="center" class="full">Về vị trí hiện tại</button>
-    </article>
-  </section>
-
-  <section class="center-col">
-    <article class="panel map-panel">
-      <div class="panel-head simple">
-        <div>
-          <div class="panel-title">Bản đồ hành trình</div>
-          <div class="tiny">Bản đồ OpenStreetMap · Leaflet</div>
-        </div>
-      </div>
-      <div id="map"></div>
-    </article>
-
-    <article class="panel console-panel">
-      <div class="panel-title">Nhật ký hệ thống</div>
-      <pre id="log"></pre>
-    </article>
-  </section>
-
-  <aside class="right-col">
-    <article class="panel config-card">
-      <div class="panel-head simple">
-        <div>
-          <div class="panel-title">Cấu hình LD2451</div>
-          <div class="tiny">Thiết lập radar phía sau</div>
-        </div>
-      </div>
-
-      <div class="form-grid">
-        <label>
-          <span>Tầm phát hiện</span>
-          <div class="input-unit">
-            <input id="range" type="number" min="10" max="100" step="1" value="100">
-            <em>m</em>
-          </div>
-        </label>
-
-        <label>
-          <span>Hướng mục tiêu</span>
-          <select id="direction">
-            <option value="0">Chỉ mục tiêu đi xa</option>
-            <option value="1" selected>Chỉ mục tiêu tiến lại gần</option>
-            <option value="2">Cả hai hướng</option>
-          </select>
-        </label>
-
-        <label>
-          <span>Tốc độ tối thiểu</span>
-          <div class="input-unit">
-            <input id="minTốc độ" type="number" min="0" max="120" step="1" value="5">
-            <em>km/h</em>
-          </div>
-        </label>
-
-        <label>
-          <span>Thời gian giữ sau khi mất mục tiêu</span>
-          <div class="input-unit">
-            <input id="delayS" type="number" min="0" max="255" step="1" value="2">
-            <em>s</em>
-          </div>
-        </label>
-
-        <label>
-          <span>Số lần kích hoạt</span>
-          <input id="triggerCount" type="number" min="1" max="10" step="1" value="1">
-        </label>
-
-        <label>
-          <span>Ngưỡng SNR</span>
-          <select id="snrThreshold">
-            <option value="0">0 · Mặc định firmware</option>
-            <option value="3">3 · Nhạy hơn</option>
-            <option value="4" selected>4 · Mặc định</option>
-            <option value="5">5</option>
-            <option value="6">6</option>
-            <option value="7">7</option>
-            <option value="8">8 · Ít nhạy hơn</option>
-          </select>
-        </label>
-      </div>
-
-      <div class="divider"></div>
-
-      <div class="subhead">Ngưỡng cảnh báo ADAS</div>
-      <div class="form-grid two">
-        <label>
-          <span>Thời gian tới va chạm (TTC) warn</span>
-          <div class="input-unit">
-            <input id="warn" type="number" min="0.5" max="30" step="0.1" value="5.0">
-            <em>s</em>
-          </div>
-        </label>
-        <label>
-          <span>Thời gian tới va chạm (TTC) critical</span>
-          <div class="input-unit">
-            <input id="critical" type="number" min="0.2" max="15" step="0.1" value="2.5">
-            <em>s</em>
-          </div>
-        </label>
-      </div>
-
-      <div class="button-stack">
-        <div class="button-row">
-          <button id="readcfg" disabled>Đọc từ radar</button>
-          <button id="writecfg" class="primary" disabled>Gửi cấu hình</button>
-        </div>
-        <div class="button-row">
-          <button id="fw" disabled>Đọc phiên bản</button>
-          <button id="ping" disabled>Kiểm tra kết nối</button>
-        </div>
-      </div>
-
-      <p class="note">Thời gian tới va chạm (TTC) là ngưỡng của ứng dụng ADAS, không phải tham số nội bộ LD2451.</p>
-    </article>
-  </aside>
+    <div class="button-row">
+      <button id="otaStart" class="primary" disabled>Cập nhật firmware</button>
+      <button id="otaAbort" disabled>Hủy</button>
+    </div>
+    <div id="otaState" class="note">Thiết bị chưa sẵn sàng OTA.</div>
+  </article>
+</aside>
 </main>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
