@@ -13,6 +13,8 @@ const U={
 let device,server,service,statusChr,radarChr,gpsChr,cmdChr,otaCtrlChr,otaDataChr,otaStatChr,linkChr;
 let logging=false,lastStatus={},track=JSON.parse(localStorage.getItem("adas_track")||"[]"),otaRunning=false;
 let otaDeviceReceived=0, otaDeviceState="idle";
+let currentBleRssi=0;
+let lastOtaWindow=0;
 const $=id=>document.getElementById(id),dec=new TextDecoder(),enc=new TextEncoder();
 function log(m){$("log").textContent=`[${new Date().toLocaleTimeString()}] ${m}\n`+$("log").textContent}
 function riskText(r){r=Number(r||0);return r>=3?"KHẨN CẤP":r===2?"NGUY HIỂM":r===1?"CHÚ Ý":"AN TOÀN"}
@@ -26,6 +28,7 @@ function fillConfig(d){if(d.range_m!=null)$("range").value=d.range_m;if(d.direct
 
 function updateBleSignal(d){
  const r=Number(d.rssi_dbm||0);
+ currentBleRssi=r;
  const el=$("bleSignal");
  if(!el)return;
  if(!r){el.textContent="— dBm";el.className="signal-text";return}
@@ -75,6 +78,30 @@ function onOtaStatus(e){
  if(d.state==="error"){$("otaState").textContent="Lỗi OTA: "+(d.message||"không rõ");otaRunning=false;$("otaStart").disabled=false;$("otaAbort").disabled=true}
 }
 
+
+function otaWindowForRssi(rssi){
+ // 0 = chưa có RSSI, giữ mức an toàn vừa phải
+ if(!rssi) return 4;
+
+ // Sóng rất tốt / tốt: ưu tiên tốc độ
+ if(rssi >= -72) return 6;
+
+ // Sóng trung bình: giảm nhẹ
+ if(rssi >= -80) return 4;
+
+ // Sóng yếu: giảm rõ để tránh GATT disconnect
+ if(rssi >= -85) return 3;
+
+ // Rất yếu: ưu tiên ổn định
+ return 2;
+}
+
+function otaMaxOutstanding(windowPackets, chunk){
+ // Cho phép trình duyệt đi trước ESP32 khoảng 4 cửa sổ,
+ // nhưng giới hạn để không flood BLE stack.
+ return Math.max(1440, Math.min(6144, windowPackets * chunk * 4));
+}
+
 async function otaUpload(){
  if(otaRunning)return;
 
@@ -109,10 +136,8 @@ async function otaUpload(){
  if(!otaRunning)throw new Error("Đã hủy OTA");
 
  let chunk=180;
- const windowPackets=6;
- const maxOutstanding=6144;  // never allow >6 KB queued ahead of ESP32
- const resumeOutstanding=3072;
  let sent=0;
+ lastOtaWindow=0;
  const started=performance.now();
  let lastUi=started;
 
@@ -120,7 +145,20 @@ async function otaUpload(){
    if(!otaRunning)throw new Error("Đã hủy OTA");
    if(!device?.gatt?.connected)throw new Error("Đã mất kết nối BLE");
 
-   // Real flow control from ESP32 OTA_STATUS.
+   // RSSI-adaptive window:
+   // strong signal -> 6 packets/window
+   // weaker signal -> 4 / 3 / 2 packets/window
+   const windowPackets=otaWindowForRssi(currentBleRssi);
+   const maxOutstanding=otaMaxOutstanding(windowPackets, chunk);
+   const resumeOutstanding=Math.max(720, Math.floor(maxOutstanding/2));
+
+   if(windowPackets!==lastOtaWindow){
+     lastOtaWindow=windowPackets;
+     const rssiText=currentBleRssi?`${currentBleRssi} dBm`:"RSSI chưa có";
+     log(`OTA tự chỉnh tốc độ: window=${windowPackets} (${rssiText})`);
+   }
+
+   // Flow control từ số byte ESP32 thực sự đã ghi.
    if(sent-otaDeviceReceived>maxOutstanding){
      while(
        otaRunning &&
@@ -170,7 +208,8 @@ async function otaUpload(){
      $("otaSpeed").textContent=rate.toFixed(1)+" KB/s";
      $("otaBytes").textContent=(otaDeviceReceived/1024).toFixed(1)+" KB";
      $("otaTime").textContent=sec.toFixed(1)+" s";
-     $("otaState").textContent=`Đang cập nhật... hàng đợi ${(Math.max(0,sent-otaDeviceReceived)/1024).toFixed(1)} KB`;
+     const rssiLabel=currentBleRssi?`${currentBleRssi} dBm`:"— dBm";
+     $("otaState").textContent=`Đang cập nhật... ${rssiLabel} · window ${windowPackets} · hàng đợi ${(Math.max(0,sent-otaDeviceReceived)/1024).toFixed(1)} KB`;
    }
  }
 
