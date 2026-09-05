@@ -445,47 +445,21 @@ async function otaUpload(){
 
   if(!otaRunning) throw new Error("Đã hủy OTA");
 
-  // OTA cố định, không adaptive theo RSSI
   const chunk=180;
-  const windowPackets=4;
-  const pacingMs=10;
-  const maxOutstanding=3072;
-  const resumeOutstanding=1536;
+  const windowPackets=6;
+  const pacingMs=2;
 
   let sent=0;
   const started=performance.now();
   let lastUi=started;
-  let lastDeviceReceived=0;
-  let lastProgressAt=performance.now();
 
   while(sent<bytes.length){
     if(!otaRunning) throw new Error("Đã hủy OTA");
     if(!device?.gatt?.connected) throw new Error("Đã mất kết nối BLE");
 
-    if(sent-otaDeviceReceived>maxOutstanding){
-      while(
-        otaRunning &&
-        device?.gatt?.connected &&
-        sent-otaDeviceReceived>resumeOutstanding
-      ){
-        if(otaDeviceReceived!==lastDeviceReceived){
-          lastDeviceReceived=otaDeviceReceived;
-          lastProgressAt=performance.now();
-        }
-
-        if(performance.now()-lastProgressAt>4000){
-          throw new Error(
-            `OTA bị đứng: ESP32-C3 dừng ở ${(otaDeviceReceived/1024).toFixed(1)} KB`
-          );
-        }
-
-        await new Promise(r=>setTimeout(r,15));
-      }
-    }
-
     let packets=0;
 
-    while(packets<windowPackets&&sent<bytes.length){
+    while(packets<windowPackets && sent<bytes.length){
       const n=Math.min(chunk,bytes.length-sent);
       const part=bytes.slice(sent,sent+n);
 
@@ -501,61 +475,43 @@ async function otaUpload(){
 
     await new Promise(r=>setTimeout(r,pacingMs));
 
-    if(otaDeviceReceived!==lastDeviceReceived){
-      lastDeviceReceived=otaDeviceReceived;
-      lastProgressAt=performance.now();
-    }
-
     const now=performance.now();
 
-    if(now-lastUi>100||sent===bytes.length){
+    if(now-lastUi>100 || sent===bytes.length){
       lastUi=now;
 
       const sec=(now-started)/1000;
-      const speed=(otaDeviceReceived/1024)/Math.max(sec,0.001);
-      const pct=100*otaDeviceReceived/bytes.length;
+      const speed=(sent/1024)/Math.max(sec,0.001);
+      const pct=100*sent/bytes.length;
 
-      $("otaBar").style.width=Math.min(100,pct)+"%";
-      $("otaPercent").textContent=Math.min(100,pct).toFixed(1)+"%";
+      $("otaBar").style.width=pct+"%";
+      $("otaPercent").textContent=pct.toFixed(1)+"%";
       $("otaSpeed").textContent=speed.toFixed(1)+" KB/s";
-      $("otaBytes").textContent=(otaDeviceReceived/1024).toFixed(1)+" KB";
+      $("otaBytes").textContent=(sent/1024).toFixed(1)+" KB";
       $("otaTime").textContent=sec.toFixed(1)+" s";
 
       const rssi=currentBleRssi?`${currentBleRssi} dBm`:"— dBm";
 
       $("otaState").textContent=
-        `Đang cập nhật... ${rssi} · window 4 · hàng đợi ${(Math.max(0,sent-otaDeviceReceived)/1024).toFixed(1)} KB`;
+        `Đang cập nhật... ${rssi} · window 6`;
     }
   }
 
   $("otaState").textContent=
-    "Đã gửi hết từ trình duyệt, đang chờ ESP32-C3 ghi nốt...";
+    "Đã gửi xong, đang chờ ESP32-C3 ghi nốt...";
 
-  const drainStart=performance.now();
+  const waitStart=performance.now();
 
   while(
-    otaRunning &&
     device?.gatt?.connected &&
-    otaDeviceReceived<bytes.length
+    otaDeviceReceived<bytes.length &&
+    performance.now()-waitStart<15000
   ){
-    if(otaDeviceReceived!==lastDeviceReceived){
-      lastDeviceReceived=otaDeviceReceived;
-      lastProgressAt=performance.now();
-    }
-
-    if(performance.now()-lastProgressAt>4000){
-      throw new Error(
-        `OTA bị đứng khi chờ ghi nốt: ${otaDeviceReceived}/${bytes.length} byte`
-      );
-    }
-
-    if(performance.now()-drainStart>15000){
-      throw new Error(
-        `Hết thời gian chờ: ESP32-C3 mới nhận ${otaDeviceReceived}/${bytes.length} byte`
-      );
-    }
-
     await new Promise(r=>setTimeout(r,25));
+  }
+
+  if(!device?.gatt?.connected){
+    throw new Error("Mất kết nối BLE trước khi hoàn tất OTA");
   }
 
   if(otaDeviceReceived!==bytes.length){
@@ -570,11 +526,12 @@ async function otaUpload(){
   const speed=(bytes.length/1024)/sec;
 
   log(
-    `OTA hoàn tất: ${(bytes.length/1024).toFixed(1)} KB / ${sec.toFixed(1)} s = ${speed.toFixed(1)} KB/s`
+    `OTA hoàn tất: ${(bytes.length/1024).toFixed(1)} KB / `+
+    `${sec.toFixed(1)} s = ${speed.toFixed(1)} KB/s`
   );
 
   $("otaState").textContent=
-    "ESP32-C3 đang kiểm tra CRC32 và kích hoạt firmware...";
+    "ESP32-C3 đang kiểm tra CRC32 và khởi động lại...";
 }
 
 $("otaStart").onclick=()=>{
