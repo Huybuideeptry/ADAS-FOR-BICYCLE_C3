@@ -19,7 +19,7 @@
   </div>
   <div class="actions">
     <button id="connect" class="primary">Kết nối BLE</button>
-    <button id="disconnect" disabled>Ngắt kết nối</button>
+    <button id="disconnect" disabled>Ngắt</button>
   </div>
 </header>
 
@@ -28,13 +28,13 @@
     <article class="panel hero">
       <div class="panel-head">
         <div>
-          <div class="panel-title">Radar / Nguy hiểm</div>
+          <div class="panel-title">Radar / Mức nguy hiểm</div>
           <div class="status-line">
             <span id="bleDot" class="dot off"></span>
             <span id="bleState">Chưa kết nối</span>
           </div>
         </div>
-        <div id="risk" class="risk-badge risk0">An toàn</div>
+        <div id="risk" class="risk-badge risk0">AN TOÀN</div>
       </div>
 
       <div class="big-metric">
@@ -43,19 +43,19 @@
       </div>
 
       <div class="metrics compact">
-        <div><span>Closing</span><b id="closing">—</b></div>
-        <div><span>TTC</span><b id="ttc">—</b></div>
-        <div><span>Angle</span><b id="angle">—</b></div>
+        <div><span>Tốc độ áp sát</span><b id="closing">—</b></div>
+        <div><span>Thời gian tới va chạm (TTC)</span><b id="ttc">—</b></div>
+        <div><span>Góc lệch</span><b id="angle">—</b></div>
         <div><span>SNR</span><b id="snr">—</b></div>
-        <div><span>Targets</span><b id="targets">—</b></div>
+        <div><span>Số mục tiêu</span><b id="targets">—</b></div>
       </div>
     </article>
 
     <article class="panel">
       <div class="panel-title">GPS</div>
       <div class="metrics compact">
-        <div><span>Fix</span><b id="fix">—</b></div>
-        <div><span>Vệ tinh</span><b id="sats">—</b></div>
+        <div><span>Định vị</span><b id="fix">—</b></div>
+        <div><span>Số vệ tinh</span><b id="sats">—</b></div>
         <div><span>Tốc độ</span><b id="speed">—</b></div>
       </div>
       <div class="coords-box">
@@ -66,14 +66,14 @@
 
     <article class="panel">
       <div class="panel-head simple">
-        <div class="panel-title">Log hành trình</div>
+        <div class="panel-title">Ghi hành trình</div>
         <div id="tripInfo" class="tiny">0 điểm</div>
       </div>
       <div class="button-grid">
         <button id="start">Bắt đầu ghi</button>
-        <button id="stop" disabled>Dừng ghi</button>
-        <button id="clear">Xóa</button>
-        <button id="export">GeoJSON</button>
+        <button id="stop" disabled>Dừng</button>
+        <button id="clear">Xóa dữ liệu</button>
+        <button id="export">Xuất GeoJSON</button>
       </div>
       <button id="center" class="full">Về vị trí hiện tại</button>
     </article>
@@ -84,14 +84,14 @@
       <div class="panel-head simple">
         <div>
           <div class="panel-title">Bản đồ hành trình</div>
-          <div class="tiny">OpenStreetMap · Leaflet</div>
+          <div class="tiny">Bản đồ OpenStreetMap · Leaflet</div>
         </div>
       </div>
       <div id="map"></div>
     </article>
 
     <article class="panel console-panel">
-      <div class="panel-title">Console</div>
+      <div class="panel-title">Nhật ký hệ thống</div>
       <pre id="log"></pre>
     </article>
   </section>
@@ -100,7 +100,7 @@
     <article class="panel config-card">
       <div class="panel-head simple">
         <div>
-          <div class="panel-title">LD2451 Config</div>
+          <div class="panel-title">Cấu hình LD2451</div>
           <div class="tiny">Thiết lập radar phía sau</div>
         </div>
       </div>
@@ -117,22 +117,22 @@
         <label>
           <span>Hướng mục tiêu</span>
           <select id="direction">
-            <option value="0">Chỉ xe đang xa dần</option>
-            <option value="1" selected>Chỉ xe đang tiến đến</option>
-            <option value="2">Cả hai</option>
+            <option value="0">Chỉ mục tiêu đi xa</option>
+            <option value="1" selected>Chỉ mục tiêu tiến lại gần</option>
+            <option value="2">Cả hai hướng</option>
           </select>
         </label>
 
         <label>
           <span>Tốc độ tối thiểu</span>
           <div class="input-unit">
-            <input id="minSpeed" type="number" min="0" max="120" step="1" value="5">
+            <input id="minTốc độ" type="number" min="0" max="120" step="1" value="5">
             <em>km/h</em>
           </div>
         </label>
 
         <label>
-          <span>Delay mất target</span>
+          <span>Thời gian giữ sau khi mất mục tiêu</span>
           <div class="input-unit">
             <input id="delayS" type="number" min="0" max="255" step="1" value="2">
             <em>s</em>
@@ -140,14 +140,14 @@
         </label>
 
         <label>
-          <span>Trigger count</span>
+          <span>Số lần kích hoạt</span>
           <input id="triggerCount" type="number" min="1" max="10" step="1" value="1">
         </label>
 
         <label>
-          <span>SNR threshold</span>
+          <span>Ngưỡng SNR</span>
           <select id="snrThreshold">
-            <option value="0">0 · Firmware default</option>
+            <option value="0">0 · Mặc định firmware</option>
             <option value="3">3 · Nhạy hơn</option>
             <option value="4" selected>4 · Mặc định</option>
             <option value="5">5</option>
@@ -160,17 +160,17 @@
 
       <div class="divider"></div>
 
-      <div class="subhead">Ngưỡng ADAS</div>
+      <div class="subhead">Ngưỡng cảnh báo ADAS</div>
       <div class="form-grid two">
         <label>
-          <span>TTC warn</span>
+          <span>Thời gian tới va chạm (TTC) warn</span>
           <div class="input-unit">
             <input id="warn" type="number" min="0.5" max="30" step="0.1" value="5.0">
             <em>s</em>
           </div>
         </label>
         <label>
-          <span>TTC critical</span>
+          <span>Thời gian tới va chạm (TTC) critical</span>
           <div class="input-unit">
             <input id="critical" type="number" min="0.2" max="15" step="0.1" value="2.5">
             <em>s</em>
@@ -184,12 +184,12 @@
           <button id="writecfg" class="primary" disabled>Gửi cấu hình</button>
         </div>
         <div class="button-row">
-          <button id="fw" disabled>Đọc firmware</button>
-          <button id="ping" disabled>PING</button>
+          <button id="fw" disabled>Đọc phiên bản</button>
+          <button id="ping" disabled>Kiểm tra kết nối</button>
         </div>
       </div>
 
-      <p class="note">TTC là ngưỡng của ứng dụng ADAS, không phải tham số nội bộ LD2451.</p>
+      <p class="note">Thời gian tới va chạm (TTC) là ngưỡng của ứng dụng ADAS, không phải tham số nội bộ LD2451.</p>
     </article>
   </aside>
 </main>
