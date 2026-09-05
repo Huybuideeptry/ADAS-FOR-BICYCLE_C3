@@ -19,7 +19,7 @@
   </div>
   <div class="actions">
     <button id="connect" class="primary">Kết nối BLE</button>
-    <button id="disconnect" disabled>Ngắt</button>
+    <button id="disconnect" disabled>Ngắt kết nối</button>
   </div>
 </header>
 
@@ -28,13 +28,13 @@
     <article class="panel hero">
       <div class="panel-head">
         <div>
-          <div class="panel-title">Radar / Risk</div>
+          <div class="panel-title">Radar / Nguy hiểm</div>
           <div class="status-line">
             <span id="bleDot" class="dot off"></span>
             <span id="bleState">Chưa kết nối</span>
           </div>
         </div>
-        <div id="risk" class="risk-badge risk0">SAFE</div>
+        <div id="risk" class="risk-badge risk0">An toàn</div>
       </div>
 
       <div class="big-metric">
@@ -55,8 +55,8 @@
       <div class="panel-title">GPS</div>
       <div class="metrics compact">
         <div><span>Fix</span><b id="fix">—</b></div>
-        <div><span>Sats</span><b id="sats">—</b></div>
-        <div><span>Speed</span><b id="speed">—</b></div>
+        <div><span>Vệ tinh</span><b id="sats">—</b></div>
+        <div><span>Tốc độ</span><b id="speed">—</b></div>
       </div>
       <div class="coords-box">
         <span>Tọa độ</span>
@@ -70,9 +70,9 @@
         <div id="tripInfo" class="tiny">0 điểm</div>
       </div>
       <div class="button-grid">
-        <button id="start">Start log</button>
-        <button id="stop" disabled>Stop</button>
-        <button id="clear">Clear</button>
+        <button id="start">Bắt đầu ghi</button>
+        <button id="stop" disabled>Dừng ghi</button>
+        <button id="clear">Xóa</button>
         <button id="export">GeoJSON</button>
       </div>
       <button id="center" class="full">Về vị trí hiện tại</button>
@@ -117,9 +117,9 @@
         <label>
           <span>Hướng mục tiêu</span>
           <select id="direction">
-            <option value="0">Away only</option>
-            <option value="1" selected>Approach only</option>
-            <option value="2">Both</option>
+            <option value="0">Chỉ xe đang xa dần</option>
+            <option value="1" selected>Chỉ xe đang tiến đến</option>
+            <option value="2">Cả hai</option>
           </select>
         </label>
 
