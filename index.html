@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ADAS Bike Monitor</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header><h1>ADAS Bike Monitor</h1><button id="connect">Kết nối BLE</button><button id="disconnect" disabled>Ngắt</button></header>
+<main>
+<section class="grid">
+<div class="card"><h3>Radar / Risk</h3><p>Risk: <b id="risk">—</b></p><p>Distance: <b id="distance">—</b></p><p>Closing: <b id="closing">—</b></p><p>Angle: <b id="angle">—</b></p></div>
+<div class="card"><h3>GPS</h3><p>Fix: <b id="fix">—</b></p><p>Sats: <b id="sats">—</b></p><p>Speed: <b id="speed">—</b></p><p>Coords: <b id="coords">—</b></p></div>
+<div class="card"><h3>LD2451 Config</h3>
+<label>Range m <input id="range" type="number" value="60"></label>
+<label>TTC warn <input id="warn" type="number" step="0.1" value="5.0"></label>
+<label>TTC critical <input id="critical" type="number" step="0.1" value="2.5"></label>
+<button id="readcfg" disabled>Đọc</button><button id="writecfg" disabled>Gửi</button></div>
+<div class="card"><h3>Log</h3><button id="start">Start log</button><button id="stop" disabled>Stop</button><button id="clear">Clear</button><button id="export">Export GeoJSON</button></div>
+</section>
+<div class="card mapwrap"><h3>Bản đồ hành trình</h3><div id="map"></div></div>
+<div class="card"><h3>Console</h3><pre id="log"></pre></div>
+</main>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="app.js"></script>
+</body></html>
