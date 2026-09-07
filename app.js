@@ -104,7 +104,6 @@ function handleGps(g){
   ).addTo(map);
  }
 
- // Lần đầu GPS có fix, tự đưa map đến vị trí xe
  if(firstGpsFix){
   firstGpsFix=false;
 
@@ -157,15 +156,6 @@ function drawTrack(){
   `${track.length} điểm`;
 }
 
-drawTrack();
- }
-}
-
-function drawTrack(){
- if(line)line.remove();
- line=L.polyline(track.map(p=>[p.lat,p.lon]),{weight:4}).addTo(map);
- $("tripInfo").textContent=`${track.length} điểm`;
-}
 drawTrack();
 
 function parse(evt){
