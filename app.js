@@ -46,29 +46,118 @@ function updateGps(d){
  if(d.fix&&d.lat!=null&&d.lon!=null)handleGps(d);
 }
 
-const map=L.map("map").setView([10.8231,106.6297],13);
-L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png",{
- maxZoom:19,
- attribution:"© OpenStreetMap contributors"
-}).addTo(map);
+const map=L.map("map",{
+ zoomControl:true
+}).setView([10.8231,106.6297],13);
+
+// Bản đồ nền OpenStreetMap
+const osm=L.tileLayer(
+ "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+ {
+  subdomains:["a","b","c"],
+  maxZoom:19,
+  attribution:"© OpenStreetMap contributors",
+  crossOrigin:true
+ }
+);
+
+osm.addTo(map);
+
+osm.on("tileerror",e=>{
+ console.warn("OSM tile error:",e);
+});
+
+// Tránh Leaflet bị sai kích thước khi trang vừa load
+setTimeout(()=>{
+ map.invalidateSize();
+},300);
+
+window.addEventListener("resize",()=>{
+ map.invalidateSize();
+});
 
 let marker=null,line=null;
+let firstGpsFix=true;
 
 function handleGps(g){
- const lat=+g.lat,lon=+g.lon;
- if(marker)marker.setLatLng([lat,lon]);
- else marker=L.circleMarker([lat,lon],{radius:7}).addTo(map);
+ const lat=Number(g.lat);
+ const lon=Number(g.lon);
+
+ if(!Number.isFinite(lat)||!Number.isFinite(lon)){
+  return;
+ }
+
+ if(lat===0&&lon===0){
+  return;
+ }
+
+ if(marker){
+  marker.setLatLng([lat,lon]);
+ }else{
+  marker=L.circleMarker(
+   [lat,lon],
+   {
+    radius:8,
+    weight:3,
+    fillOpacity:0.9
+   }
+  ).addTo(map);
+ }
+
+ // Lần đầu GPS có fix, tự đưa map đến vị trí xe
+ if(firstGpsFix){
+  firstGpsFix=false;
+
+  map.setView(
+   [lat,lon],
+   17
+  );
+
+  setTimeout(()=>{
+   map.invalidateSize();
+  },100);
+ }
 
  if(logging){
   track.push({
    t:new Date().toISOString(),
-   lat,lon,
-   speed_kmh:+(g.speed_kmh||0),
+   lat,
+   lon,
+   speed_kmh:Number(g.speed_kmh||0),
    ...lastStatus
   });
 
-  localStorage.setItem("adas_track",JSON.stringify(track));
+  localStorage.setItem(
+   "adas_track",
+   JSON.stringify(track)
+  );
+
   drawTrack();
+ }
+}
+
+function drawTrack(){
+ if(line){
+  line.remove();
+ }
+
+ if(track.length>0){
+  line=L.polyline(
+   track.map(p=>[
+    p.lat,
+    p.lon
+   ]),
+   {
+    weight:4
+   }
+  ).addTo(map);
+ }
+
+ $("tripInfo").textContent=
+  `${track.length} điểm`;
+}
+
+drawTrack();
  }
 }
 
@@ -354,6 +443,10 @@ $("center").onclick=()=>{
    marker.getLatLng(),
    17
   );
+
+  setTimeout(()=>{
+   map.invalidateSize();
+  },100);
  }
 };
 
