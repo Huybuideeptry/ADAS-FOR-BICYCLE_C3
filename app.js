@@ -51,30 +51,21 @@ const map=L.map("map",{
 }).setView([10.8231,106.6297],13);
 
 const baseMap=L.tileLayer(
- "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png",
+ "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
  {
-  subdomains:"abcd",
-  maxZoom:20,
-  attribution:"© OpenStreetMap contributors © CARTO"
+  maxZoom:19,
+  attribution:"© OpenStreetMap contributors"
  }
 );
 
 baseMap.addTo(map);
 
-baseMap.on("load",()=>{
- console.log("[MAP] CARTO tiles loaded");
-});
-
-baseMap.on("tileerror",e=>{
- console.error("[MAP] CARTO tile error:",e);
-});
-
 setTimeout(()=>{
- map.invalidateSize();
+ map.invalidateSize(true);
 },300);
 
 window.addEventListener("resize",()=>{
- map.invalidateSize();
+ map.invalidateSize(true);
 });
 
 let marker=null,line=null;
