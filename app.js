@@ -157,7 +157,8 @@ function drawTrack(){
 }
 
 drawTrack();
-
+}
+}
 function parse(evt){
  try{
   return JSON.parse(dec.decode(evt.target.value));
