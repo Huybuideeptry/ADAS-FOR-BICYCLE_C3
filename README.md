@@ -7,7 +7,4 @@ Giao diện mới theo kiểu dashboard xe:
 - Responsive cho tablet/mobile
 - Giữ nguyên toàn bộ ID và logic BLE của web v2
 
-Chỉ cần thay:
-- index.html
-- style.css
-- app.js
+
