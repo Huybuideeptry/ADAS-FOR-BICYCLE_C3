@@ -50,20 +50,23 @@ const map=L.map("map",{
  zoomControl:true
 }).setView([10.8231,106.6297],13);
 
-const osm=L.tileLayer(
- "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+const baseMap=L.tileLayer(
+ "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png",
  {
-  subdomains:["a","b","c"],
-  maxZoom:19,
-  attribution:"© OpenStreetMap contributors",
-  crossOrigin:true
+  subdomains:"abcd",
+  maxZoom:20,
+  attribution:"© OpenStreetMap contributors © CARTO"
  }
 );
 
-osm.addTo(map);
+baseMap.addTo(map);
 
-osm.on("tileerror",e=>{
- console.warn("OSM tile error:",e);
+baseMap.on("load",()=>{
+ console.log("[MAP] CARTO tiles loaded");
+});
+
+baseMap.on("tileerror",e=>{
+ console.error("[MAP] CARTO tile error:",e);
 });
 
 setTimeout(()=>{
