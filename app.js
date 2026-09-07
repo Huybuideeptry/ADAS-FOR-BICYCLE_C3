@@ -50,7 +50,6 @@ const map=L.map("map",{
  zoomControl:true
 }).setView([10.8231,106.6297],13);
 
-// Bản đồ nền OpenStreetMap
 const osm=L.tileLayer(
  "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
  {
@@ -67,7 +66,6 @@ osm.on("tileerror",e=>{
  console.warn("OSM tile error:",e);
 });
 
-// Tránh Leaflet bị sai kích thước khi trang vừa load
 setTimeout(()=>{
  map.invalidateSize();
 },300);
@@ -157,8 +155,7 @@ function drawTrack(){
 }
 
 drawTrack();
-}
-}
+
 function parse(evt){
  try{
   return JSON.parse(dec.decode(evt.target.value));
